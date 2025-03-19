@@ -1,4 +1,6 @@
 # task2.py
+import sys
+import json
 from collections import Counter
 
 # Алфавит
@@ -15,39 +17,67 @@ russian_freq = {
     "Ь": 0.003625, "Ф": 0.002416, "Ъ": 0.000000
 }
 
-# Чтение зашифрованного текста
-with open("cod15.txt", "r", encoding="utf-8") as f:
-    cipher_text = f.read()
+# Функция для чтения файла
+def read_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
 
-# Подсчёт частот символов в зашифрованном тексте
-frequencies = Counter(cipher_text)
-total_chars = len(cipher_text)
-cipher_freq = {char: count/total_chars for char, count in frequencies.items()}
+# Функция для записи в файл
+def write_file(file_path, content):
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
 
-# Сортировка по убыванию частоты
-sorted_cipher_freq = sorted(cipher_freq.items(), key=lambda x: x[1], reverse=True)
-sorted_russian_freq = sorted(russian_freq.items(), key=lambda x: x[1], reverse=True)
+# Функция для подсчёта частот символов
+def calculate_frequencies(text):
+    frequencies = Counter(text)
+    total_chars = len(text)
+    return {char: count/total_chars for char, count in frequencies.items()}
 
-# Создание mapping на основе частот
-mapping = {}
-for (cipher_char, _), (rus_char, _) in zip(sorted_cipher_freq, sorted_russian_freq):
-    if cipher_char not in ['\n', 'l', 'I']:  # Пропускаем лишние символы
-        mapping[cipher_char] = rus_char
+# Функция для создания mapping на основе частот
+def create_mapping(cipher_freq, russian_freq):
+    sorted_cipher_freq = sorted(cipher_freq.items(), key=lambda x: x[1], reverse=True)
+    sorted_russian_freq = sorted(russian_freq.items(), key=lambda x: x[1], reverse=True)
+    mapping = {}
+    for (cipher_char, _), (rus_char, _) in zip(sorted_cipher_freq, sorted_russian_freq):
+        if cipher_char not in ['\n', 'l', 'I']:  # Пропускаем лишние символы
+            mapping[cipher_char] = rus_char
+    return mapping
 
-# Расшифровка текста
-decrypted = ""
-for char in cipher_text:
-    if char in mapping:
-        decrypted += mapping[char]
-    else:
-        decrypted += char  # Оставляем символы, которые не сопоставлены
+# Функция для расшифровки текста
+def decrypt_text(cipher_text, mapping):
+    decrypted = ""
+    for char in cipher_text:
+        decrypted += mapping.get(char, char)  # Оставляем символы, которые не сопоставлены
+    return decrypted
 
-# Сохранение результатов
-with open("task2_decrypted.txt", "w", encoding="utf-8") as f:
-    f.write(decrypted)
+def main():
+    # Проверка аргументов командной строки
+    if len(sys.argv) != 4:
+        print("Использование: python task2.py <input_file> <output_file> <key_file>")
+        sys.exit(1)
 
-# Сохранение ключа
-with open("task2_key.txt", "w", encoding="utf-8") as f:
-    f.write("Сопоставление символов (зашифрованный → расшифрованный):\n")
-    for cipher_char, rus_char in mapping.items():
-        f.write(f"{cipher_char} → {rus_char}\n")
+    input_file = sys.argv[1]  # Путь к зашифрованному файлу
+    output_file = sys.argv[2]  # Путь к расшифрованному файлу
+    key_file = sys.argv[3]    # Путь к файлу с ключом (JSON)
+
+    # Чтение зашифрованного текста
+    cipher_text = read_file(input_file)
+
+    # Подсчёт частот
+    cipher_freq = calculate_frequencies(cipher_text)
+
+    # Создание mapping
+    mapping = create_mapping(cipher_freq, russian_freq)
+
+    # Расшифровка текста
+    decrypted = decrypt_text(cipher_text, mapping)
+
+    # Сохранение результатов
+    write_file(output_file, decrypted)
+
+    # Сохранение mapping в JSON
+    with open(key_file, "w", encoding="utf-8") as f:
+        json.dump(mapping, f, ensure_ascii=False, indent=4)
+
+if __name__ == "__main__":
+    main()
