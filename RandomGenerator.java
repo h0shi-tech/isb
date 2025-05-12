@@ -4,8 +4,17 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс для генерации псевдослучайных последовательностей.
+ * Использует стандартный генератор случайных чисел Java.
+ */
 public class RandomGenerator {
-    // Функция для генерации псевдослучайной последовательности
+    /**
+     * Генерирует псевдослучайную последовательность заданной длины.
+     *
+     * @param length длина генерируемой последовательности в битах
+     * @return список булевых значений, представляющих последовательность
+     */
     public static List<Boolean> generateRandomSequence(int length) {
         List<Boolean> sequence = new ArrayList<>();
         Random random = new Random();
@@ -17,6 +26,12 @@ public class RandomGenerator {
         return sequence;
     }
 
+    /**
+     * Основной метод программы.
+     * Генерирует последовательность длиной 1 миллион бит и сохраняет её в файл.
+     *
+     * @param args аргументы командной строки (не используются)
+     */
     public static void main(String[] args) {
         // Генерация последовательности
         int sequenceLength = 1000000; // 1 миллион бит
