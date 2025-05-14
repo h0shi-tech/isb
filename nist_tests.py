@@ -3,11 +3,7 @@ import numpy as np
 from typing import List, Dict
 import json
 import os
-
-# Константы из документации NIST
-BLOCK_SIZE = 8  # Размер блока для теста на самую длинную последовательность единиц
-EXPECTED_VALUES = [0.2148, 0.3672, 0.2305, 0.1875]  # Ожидаемые значения для размера блока 8
-SIGNIFICANCE_LEVEL = 0.01  # Стандартный уровень значимости для тестов NIST
+from nist_constants import BLOCK_SIZE, EXPECTED_VALUES, SIGNIFICANCE_LEVEL, RUN_CATEGORIES
 
 def read_sequence(filename: str) -> List[int]:
     """
@@ -114,13 +110,13 @@ def longest_run_ones_test(sequence: List[int]) -> float:
     counts = [0] * len(EXPECTED_VALUES)
     for run in max_runs:
         if run <= 1:
-            counts[0] += 1
+            counts[RUN_CATEGORIES["<=1"]] += 1
         elif run == 2:
-            counts[1] += 1
+            counts[RUN_CATEGORIES["2"]] += 1
         elif run == 3:
-            counts[2] += 1
+            counts[RUN_CATEGORIES["3"]] += 1
         else:
-            counts[3] += 1
+            counts[RUN_CATEGORIES[">3"]] += 1
 
     # Вычисляем статистику хи-квадрат
     chi_square = sum((obs - num_blocks * exp) ** 2 / (num_blocks * exp) 
