@@ -3,7 +3,17 @@ import numpy as np
 from typing import List, Dict
 import json
 import os
-from nist_constants import BLOCK_SIZE, EXPECTED_VALUES, SIGNIFICANCE_LEVEL, RUN_CATEGORIES
+
+def load_constants() -> Dict:
+    try:
+        with open('nist_constants.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError("Файл nist_constants.json не найден")
+    except json.JSONDecodeError:
+        raise ValueError("Файл nist_constants.json содержит некорректный JSON")
+
+CONSTANTS = load_constants()
 
 def read_sequence(filename: str) -> List[int]:
     """
@@ -88,7 +98,7 @@ def longest_run_ones_test(sequence: List[int]) -> float:
         p-значение теста
     """
     n = len(sequence)
-    num_blocks = n // BLOCK_SIZE
+    num_blocks = n // CONSTANTS['block_size']
     
     if num_blocks < 1:
         return 0.0
@@ -96,7 +106,7 @@ def longest_run_ones_test(sequence: List[int]) -> float:
     # Находим максимальную длину серии единиц в каждом блоке
     max_runs = []
     for i in range(num_blocks):
-        block = sequence[i * BLOCK_SIZE : (i + 1) * BLOCK_SIZE]
+        block = sequence[i * CONSTANTS['block_size'] : (i + 1) * CONSTANTS['block_size']]
         current_run = max_run = 0
         for bit in block:
             if bit == 1:
@@ -107,20 +117,20 @@ def longest_run_ones_test(sequence: List[int]) -> float:
         max_runs.append(max_run)
 
     # Подсчитываем серии в каждой категории
-    counts = [0] * len(EXPECTED_VALUES)
+    counts = [0] * len(CONSTANTS['expected_values'])
     for run in max_runs:
         if run <= 1:
-            counts[RUN_CATEGORIES["<=1"]] += 1
+            counts[CONSTANTS['run_categories']['<=1']] += 1
         elif run == 2:
-            counts[RUN_CATEGORIES["2"]] += 1
+            counts[CONSTANTS['run_categories']['2']] += 1
         elif run == 3:
-            counts[RUN_CATEGORIES["3"]] += 1
+            counts[CONSTANTS['run_categories']['3']] += 1
         else:
-            counts[RUN_CATEGORIES[">3"]] += 1
+            counts[CONSTANTS['run_categories']['>3']] += 1
 
     # Вычисляем статистику хи-квадрат
     chi_square = sum((obs - num_blocks * exp) ** 2 / (num_blocks * exp) 
-                    for obs, exp in zip(counts, EXPECTED_VALUES))
+                    for obs, exp in zip(counts, CONSTANTS['expected_values']))
     
     # Вычисляем p-значение с помощью неполной гамма-функции
     return math.gamma(2.5) * math.exp(-chi_square/2) * (chi_square/2) ** 1.5
