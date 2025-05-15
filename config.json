@@ -1,0 +1,27 @@
+{
+    "symmetric": {
+        "key_size": 16,
+        "iv_size": 16,
+        "block_size": 16,
+        "algorithm": "SEED",
+        "mode": "CBC",
+        "padding": "ANSIX923"
+    },
+    "asymmetric": {
+        "key_size": 2048,
+        "public_exponent": 65537,
+        "algorithm": "RSA",
+        "padding": {
+            "type": "OAEP",
+            "hash_algorithm": "SHA256",
+            "mgf": "MGF1",
+            "label": null
+        }
+    },
+    "serialization": {
+        "encoding": "PEM",
+        "public_format": "SubjectPublicKeyInfo",
+        "private_format": "TraditionalOpenSSL",
+        "encryption_algorithm": "NoEncryption"
+    }
+} 
