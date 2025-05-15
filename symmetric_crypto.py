@@ -1,6 +1,7 @@
 import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding as sym_padding
+import config
 
 class SymmetricCrypto:
     def __init__(self):
@@ -8,23 +9,30 @@ class SymmetricCrypto:
         self.iv = None
 
     def generate_key(self):
-        """Генерация ключа для SEED (128 бит)"""
-        self.key = os.urandom(16)  # 128 бит = 16 байт
+        """Генерация ключа для SEED"""
+        config_data = config.load_config()
+        self.key = os.urandom(config_data['symmetric']['key_size'])
         return self.key
 
     def generate_iv(self):
         """Генерация IV для SEED"""
-        self.iv = os.urandom(16)
+        config_data = config.load_config()
+        self.iv = os.urandom(config_data['symmetric']['iv_size'])
         return self.iv
 
     def encrypt(self, data):
         """Шифрование данных алгоритмом SEED"""
-        # Паддинг данных
-        padder = sym_padding.ANSIX923(16).padder()
+        config_data = config.load_config()
+        
+        
+        padder = getattr(sym_padding, config_data['symmetric']['padding'])(config_data['symmetric']['block_size']).padder()
         padded_data = padder.update(data) + padder.finalize()
 
-        # Шифрование данных
-        cipher = Cipher(algorithms.SEED(self.key), modes.CBC(self.iv))
+        
+        cipher = Cipher(
+            getattr(algorithms, config_data['symmetric']['algorithm'])(self.key),
+            getattr(modes, config_data['symmetric']['mode'])(self.iv)
+        )
         encryptor = cipher.encryptor()
         encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
 
@@ -32,13 +40,18 @@ class SymmetricCrypto:
 
     def decrypt(self, encrypted_data):
         """Дешифрование данных алгоритмом SEED"""
-        # Дешифрование данных
-        cipher = Cipher(algorithms.SEED(self.key), modes.CBC(self.iv))
+        config_data = config.load_config()
+        
+        
+        cipher = Cipher(
+            getattr(algorithms, config_data['symmetric']['algorithm'])(self.key),
+            getattr(modes, config_data['symmetric']['mode'])(self.iv)
+        )
         decryptor = cipher.decryptor()
         decrypted_data = decryptor.update(encrypted_data) + decryptor.finalize()
 
-        # Удаление паддинга
-        unpadder = sym_padding.ANSIX923(16).unpadder()
+        
+        unpadder = getattr(sym_padding, config_data['symmetric']['padding'])(config_data['symmetric']['block_size']).unpadder()
         unpadded_data = unpadder.update(decrypted_data) + unpadder.finalize()
 
         return unpadded_data 
